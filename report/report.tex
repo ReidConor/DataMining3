@@ -1,0 +1,136 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Short Sectioned Assignment
+% LaTeX Template
+% Version 1.0 (5/5/12)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% Original author:
+% Frits Wenneker (http://www.howtotex.com)
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\documentclass[paper=a4, fontsize=11pt]{scrartcl} % A4 paper and 10pt font size
+
+\usepackage[T1]{fontenc} % Use 8-bit encoding that has 256 glyphs
+%\usepackage{fourier} % Use the Adobe Utopia font for the document - comment this line to return to the LaTeX default
+\usepackage[english]{babel} % English language/hyphenation
+\usepackage{amsmath,amsfonts,amsthm} % Math packages
+\usepackage[toc,page]{appendix}
+\usepackage{lipsum} % Used for inserting dummy 'Lorem ipsum' text into the template
+\usepackage{hyperref}
+\usepackage{sectsty} % Allows customizing section commands
+\sectionfont{\large}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{courier}
+
+\usepackage{geometry}
+ \geometry{
+ a4paper,
+ left=15mm,
+ right=15mm,
+ top=15mm,
+ bottom=20mm
+ }
+ 
+\usepackage{graphicx}
+\setlength{\columnsep}{0.9cm}
+%----------------------------------------------------------------------------------------
+%	TITLE SECTION
+%----------------------------------------------------------------------------------------
+\begin{document}
+\begin{titlepage}
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}} % Defines a new command for the horizontal lines, change thickness here
+
+\center % Center everything on the page
+
+%----------------------------------------------------------------------------------------
+%	HEADING SECTIONS
+%----------------------------------------------------------------------------------------
+
+\textsc{\LARGE UCD Smurfit Graduate School of Business}\\[1.5cm] % Name of your university/college
+\includegraphics[scale = 0.6]{images/logo.png} \\ [1cm]
+\textsc{\Large Network Software Modelling}\\[0.5cm] % Major heading such as course name
+
+%----------------------------------------------------------------------------------------
+%	TITLE SECTION
+%----------------------------------------------------------------------------------------
+
+\HRule \\[0.4cm]
+{ \LARGE \bfseries Assignment Two - Graph Simulations}\\[0.4cm] % Title of your document
+\HRule \\[1.5cm]
+
+%----------------------------------------------------------------------------------------
+%	AUTHOR SECTION
+%----------------------------------------------------------------------------------------
+
+\begin{minipage}{0.4\textwidth}
+\begin{flushleft} \large
+\emph{Authors:}\\
+\small{
+Eoghan \textsc{Aherne} (??? - MSc B.A Part-time)
+\\ Ian \textsc{Brady} (??? - MSc B.A Part-time)
+\\Conor \textsc{Reid} (16202630 - MSc B.A Part-time)
+} % Your name
+\end{flushleft}
+\end{minipage}
+~
+\begin{minipage}{0.4\textwidth}
+\begin{flushright} \large
+\emph{Lecturer:} \\
+Dr. James \textsc{McDermott} % Supervisor's Name
+\end{flushright}
+\end{minipage}\\[4cm]
+
+%----------------------------------------------------------------------------------------
+%	DATE SECTION
+%----------------------------------------------------------------------------------------
+
+\vspace{5cm}
+
+{\large \today}\\[3cm] % Date, change the \today to a set date if you want to be precise
+
+\vfill % Fill the rest of the page with whitespace
+
+\end{titlepage}
+\clearpage
+%----------------------------------------------------------------------------------------
+%	MAIN BODY
+%----------------------------------------------------------------------------------------
+%--------------------------------
+%	Overview
+%--------------------------------
+\onecolumn
+\setlength{\parindent}{10ex}
+%\tableofcontents
+\clearpage
+{\noindent \bf \large Real-World Phenomenon}\\
+{\noindent This is just sample text }
+\par {\lipsum[2]}
+\par{\lipsum[3]}
+\par{Test}
+\\\\
+{\noindent \bf \large Graph Model}\\\\
+{\noindent \bf \large Simulation Rules}\\\\
+{\noindent \bf \large The Program}\\\\
+{\noindent \bf \large Simulation \& Graph Properties}\\\\
+{\noindent \bf \large Experiments}\\\\
+{\noindent \bf \large Conclusions}\\\\
+\clearpage
+\begin{thebibliography}{9}
+
+\bibitem{test}
+  This is a sample reference
+
+\end{thebibliography}
+\end{document}
