@@ -71,7 +71,7 @@ for (i in 2:15) wss[i] = sum(kmeans(collegeBalancedClustering, centers=i)$within
 plot(1:15, wss, type="b", xlab="Number of Clusters",
      ylab="Within groups sum of squares")
 #pick three?
-kmeansCluster = kmeans(collegeBalancedClustering, 3) # 5 cluster solution
+kmeansCluster = kmeans(collegeBalancedClustering, 3) # 3 cluster solution
 aggregate(collegeBalancedClustering,by=list(kmeansCluster$cluster),FUN=mean)
 
 #plot a silhouette
