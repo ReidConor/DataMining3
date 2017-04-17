@@ -143,13 +143,15 @@ Dr. Michael \textsc{O'Neill} % Supervisor's Name
 {\noindent \bf \Large R Code Analysis - Q2}\\
 {The R code being analysed here is shown below. In general, this code aims to take some dataset and partition it into training and test subsets for model learning, and testing respectively. }
 \begin{lstlisting}
-> set.seed(1234)> dataPartition <- sample(2,nrow(data),replace=TRUE,prob=c(0.7,0.3)) 
-> trainData <- data [dataPartition ==1,]> testData <- data [dataPartition ==2,]
+> set.seed(1234)
+> dataPartition <- sample(2,nrow(data),replace=TRUE,prob=c(0.7,0.3)) 
+> trainData <- data [dataPartition ==1,]
+> testData <- data [dataPartition ==2,]
 \end{lstlisting}
 {\par{ Since there is a random element to the above procedure, a seed is set. This contains the randomness, and allows the same results to be obtained each time the code is ran. Changing the seed changes the results.}
 \par{The \texttt{sample()} function in R takes a sample of a given size, with or without replacement. Here, \texttt{sample(2)} returns the numbers 1 and 2 in a random order. Passing in the data dataset, we can assign one of the two "labels" to each observation, thus designating which of the training (1) or test (2) datasets we want that observation to be in. \texttt{replace=TRUE} means that we are sampling with replacement. \texttt{sample(2, replace=TRUE)} may return "2 , 2" or "1, 2" etc. 
 \par{
-The \texttt{prob(...)} term at the end indicates the split of the data between the two subsets. 70\% goes to training, 30\% to test.}}
+The \texttt{prob(...)} term at the end indicates the split of the data between the two subsets. 70\% goes to training, 30\% to test.} The following two lines simply pick out observations in the data and assigns them to each subset. }
 %gives you "1 2" in a random order
 }\\\\
 {\noindent \bf \Large The Weka implementation of C4.5 algorithm - Q3}\\
@@ -324,12 +326,176 @@ Sensitivity = \frac{236}{236 + 61} = 79\%
 Specificity =\frac{246}{246 + 63} = 80\%
 \end{equation}}
 {\par This split reduced the tree to a size of 47 which is significantly less than the previous result. It can be said then that the model dependancy is less, and it should generalise better. The sensitivity and specificity above are interesting results; out ability to detect {\it Good} instances has grown, while our ability to detect {\it Bad} instances has reduced. In the context of our problem, it may be that the first model is better since we can have greater confidence when we find a {\it Bad} instance that it is in fact just that. Further analysis of the problem may further inform which model is better.}\\\\
-{\noindent \bf \Large The \texttt{college} dataset}
+{\noindent \bf \Large The \texttt{college} dataset}\\\\
+{\noindent \bf \large Q1 \& Q2 - What can we learn from the dataset, and classification techniques used.}\\
+{One of the most obvious features of the dataset is that it is highly unbalanced, with almost 90\% of colleges falling into the "Not-Elite" class. This is to be expected since in the real-world we recognise a small percentage of academic institutes as elite performers. This unbalance will need to be accounted for in any subsequent analysis. 
+\begin{lstlisting}
+college = read.csv(file="data/college.csv",head=TRUE,sep=",")
+college = college[,-c(1,2)] #dont need the row num, or college name (all are unique)
+table(college$isElite)
+>>	Elite		Not Elite 
+>>	78			 699 
+\end{lstlisting}
+{\par We can perform an aggregate across features in this dataset and split by elite status, using the code below. This gives a good indication of how useful each feature may be for dividing the classes. Mean values across each feature seem to differ substantially with elite status, with the average graduation rate 20\% higher for elite colleges for example. From this preliminary finding, it is likely that an accurate classification model is achievable that will be used to classify new, unseen instances to good effect.  
+\begin{lstlisting}
+aggregate(college[, 1:4], list(college$isElite), mean)#averages split by elite or not
+>>    Group.1 	accept_rate 	 Outstate    	Enroll		 Grad.Rate
+>> 1     Elite      0.5434093 	 15248.564 	1060.7179  	83.38462
+>> 2 Not Elite   0.7696379  	9904.166  	       748.6452  	    63.46352
+\end{lstlisting}
+}
 \clearpage
-\begin{thebibliography}{9}
+{\par Figure \ref{Acceptance_Rate_by_Elite_Status} shows the acceptance rate density per elite status. It is clear from the analysis above that the acceptance rate is very much higher in non-elite colleges, the plot below is simply a visual confirmation of this. Elite colleges show potentially two clusters of acceptance rate density, one at approximately 45\% and another at approximately 80\%. It may be worthwhile exploring this further later in this analysis. Non-Elite colleges have a distinctly normal, although skewed to the right, distribution with most colleges admitting roughly 80\% of applicants. 
+\begin{lstlisting}
+qplot(accept_rate, data=college, geom="density", fill=isElite, alpha=I(.5), 
+      main="Distribution of Acceptance Rate by Status", xlab="Accept Rate", 
+      ylab="Density")
+\end{lstlisting}
+\begin{figure}[h]
+\centering
+\includegraphics[scale = 0.75]{images/q7_acceptanceRatesByStatus.pdf}
+\caption{Acceptance Rate by Elite Status} 
+\label{Acceptance_Rate_by_Elite_Status}
+\end{figure}}
+{\par For the final piece of exploratory analysis, we look to see how the "Private" status of the college may be influencing its Elite status. Approximately 72\% of Non-Elite colleges are private, compared to approximately 83\% of Elite schools. This points to a potential importance associated with the "Private" feature for separating out classes of colleges. 
+\begin{lstlisting}
+table(college$isElite,college$Private)
+>>						No 		Yes
+>>	Elite     	 	13  		65
+>>	Not Elite      199		500
+\end{lstlisting}}
+{\par A classification model can now be built using this dataset. As mentioned above, the dependant variable (i.e. the Elite status of the college) is highly unbalanced, and so the code below is used to resample the minority class and under-sample the majority class to yield a more balanced dataset. This will facilitate a model that is better able to detect instances from the minor class (the Elite colleges) as well as the majority class (the Non Elite colleges). 
+\begin{lstlisting}
+college$isElite = as.numeric(college$isElite)
+college$Private = as.numeric(college$Private)
+college$isElite = as.factor(college$isElite)
+collegeBalanced = SMOTE(isElite ~ ., college, perc.over = 300, perc.under=300)
+collegeBalanced$isElite = as.numeric(collegeBalanced$isElite)
+table(collegeBalanced$isElite)
+>> 1		  2 
+>>	312 	702
+\end{lstlisting}}
+{\par The \texttt{SMOTE} function is used to achieve the over and under-sampling. The key parameters here are the \texttt{perc.over} parameter (which represents a number that drives the decision of how many extra observations from the minority class are generated) and \texttt{perc.under} (which represents a number the drives the decision of how many extra observations from the minority classes are selected for each case generated from the minority class). We now have a more balanced dataset, albeit still one-sided towards Non Elite colleges (class 2). With more time, an analysis of how to best balance this dataset would be desirable.}
+{\par The dataset must now be split into training and test subsets, which are used to build the model and test it respectively. A 70:30 split is used, as is standard practice. The code below is used to do this. 
+\begin{lstlisting}
+dataPartition = sample(2,nrow(collegeBalanced),replace=TRUE,prob=c(0.7,0.3))
+trainData = collegeBalanced[dataPartition ==1,]
+testData = collegeBalanced[dataPartition ==2,]
+trainData$isElite <- as.factor(trainData$isElite)
+dim(trainData)
+>>  [1] 726   6
+dim(testData)
+>> [1] 288   6
+\end{lstlisting}}
+{\par The classification models can now be built. Included first is a discussion of the algorithm usage, a discussion of results across each algorithm follows (although the confusion matrix or each algorithm test run is included, as well as the percentage accuracy) . We begin by building a classification tree as is used throughout this report. The code used to achieve this is below.
+\begin{lstlisting}
+treeModelPruned = C5.0(x = trainData[, -6], y = trainData$isElite,
+                       control = C5.0Control(noGlobalPruning=FALSE))
+treeModelPruned #for output, see attached R script
+summary(treeModelPruned) #for output, see attached R script 
+predictions <- predict(treeModelPruned, testData, type="class")
+table(testData$isElite, predictions)
+>>    predictions
+>>      1   2
+>>  1  74  20
+>>  2  12 182
+mean(testData$isElite == predictions) 
+>>[1] 0.8888889
 
-\bibitem{test}
-  This is a sample reference
+\end{lstlisting}
+The \texttt{C5.0} function is used. This takes the dataset as the first parameter, minus the target variable which is in position six in the above example. That target variable is passed in second, along with a parameter to allow pruning to take place. This is done in order to build a simplified tree that will be easier to interpret.}
+{\par Next, the random forest model is used on the same training and test dataset. Also known as "random decision trees", this is a method of constructing a multitude of decision trees at training time and outputting the class that most frequently occurs across all trees (the mode class). It is known that random trees help address the overfitting issue of normal classification trees, and so should provide better results in this case. The code used to build the random forest is below. 
+\begin{lstlisting}
+library(randomForest)
+randomForestModel = randomForest(isElite ~ ., data=trainData, ntree=100, proximity=T )
+table(predict(randomForestModel), trainData$isElite)
+print(randomForestModel)
+plot(randomForestModel, main= "")
+importance(randomForestModel)
+randomForestModelPred = predict (randomForestModel, newdata = testData)
+table(testData$isElite,randomForestModelPred)
+>>      1   2
+>>  1  77  17
+>>  2  12 182
+mean(testData$isElite == randomForestModelPred) 
+>> [1] 0.8993056
+\end{lstlisting}
+The \texttt{randomForest} function is used to build the decision trees. This takes the target variable as the first parameter, and the dataset as the second. The \texttt{ntree} term decides the number of trees to grow. It is desirable to pick an amount such that the error is stabilised, but not too many so as to cause overfitting. From some light testing, it is apparent that increasing or decreasing this number makes little difference. Again, with more time an optimal number here can be found. The final \texttt{proximity} term decides whether the proximity measure (i.e. the "closeness" or "nearness" between pairs of observations) among the rows is calculated. The proximity is often used in replacing missing data and locating outliers, and is set to "True" here.
+}
+{\par The third and final classification model that is used is quadratic discriminant analysis (QDA). This method is similar to linear discriminant analysis (LDA), but instead of a linear separator it uses a quadric surface. That is, it works to create a surface that separates the classes in space. When new observations are introduced, they are effectively plotted to the same space and their class then is determined by which side of the dividing surface they lie on. Since this is simply a more general version of LDA, it is easily implemented in code which is shown below.
+\begin{lstlisting}
+library(MASS)
+qdaModel = qda(formula=isElite~., data=trainData)
+summary(qdaModel)
+sqdPred = predict(qdaModel, newdata=testData)
+table(actual=testData$isElite, predicted=sqdPred$class)
+>>      1   2
+>>  1  68  26
+>>  2  17 177
+mean(sqdPred$class == testData$isElite) 
+>> [1] 0.8506944
+\end{lstlisting}
+{\par Overall, it is clear that all three models perform very well and achieve high amounts of class matches at test time. Classification decision trees correctly allocated an Elite status approximately 89\% of the time, with the random forest technique managing a 1\% increase to approximately 90\% accuracy. Quadratic discriminant analysis achieved an accuracy score of just 85\% making it the least powerful classification technique in this instance.}
+{\par Both decision tree algorithms allow the study of the important variables in their respective constructions. Important variables are those that can be best used to split the data into classes. The pruned decision tree model showed that both the "accept\_rate" and "Outstate" variables were highly important, with attribute usage scores of 100\%. This means those variables are used in classifying every single observation in the dataset. The "Private" and "Grad.Rate" variables follow in importance, at 72\% and 40\% respectively. These are less important, but still highly useful. The only variable shown to have little correlation with Elite status is the "Enroll" variable.}
+{\par The random forest algorithm agreed with some of these findings. It found the "accept\_rate" and "Outstate" features to be the most important, followed at a distance by "Grad.Rate". Interestingly however, is that this model found that "Enroll" was the next useful feature in predicting Elite status with a non-negligible impact. "Private" , which proved to be highly important above, was the least powerful here with negligible impact.}
+{\par It is clear then that the acceptance rate and out-of-state tuition features have high predictive power for determining the Elite status of a college. It could also be said that the graduation rate is also useful here. The role of the private status of the college, and the amount of enrolled students is yet unclear. Further analysis may be required to satisfy this, potentially using a bigger dataset or employing other algorithms.}}}\\\\
+{\noindent \bf \large Q3 - Clustering analysis}\\
+{The final part of this analysis involves removing the target variable, the Elite status, from the college dataset considered above and carrying out clustering on the remaining features. Up until this point, we have been considering supervised learning, where we know which class observations belong to before building the model.
+By removing this class feature, we move into the unsupervised learning space where we try to group observations into as-yet-unknown classes. There is potential benefit here in doing so, since we can validate the decision to use a binary class system in the first place but also to see whether the Elite status of colleges should be broken down further. }
+{\par The code used to facilitate this analysis begins as below; }
+\begin{lstlisting}
+collegeBalancedClustering = collegeBalanced[,-6]
+wss = (nrow(collegeBalancedClustering)-1)*sum(apply(collegeBalancedClustering,2,var))
+for (i in 2:15) wss[i] = sum(kmeans(collegeBalancedClustering, centers=i)$withinss)
+plot(1:15, wss, type="b", xlab="Number of Clusters",
+     ylab="Within groups sum of squares")
+\end{lstlisting}
+{First the isElite variable is removed from the dataset. Next, a plot is generated that maps the hypothetical number of clusters used against the within group sum of squares (figure \ref{Number_of_Clusters_and_within_group_SOS} . Ideally this measure would be small, since that would indicate the presence of tightly clustered distinct centres. The plot below shows that using 3 clusters yields a low measure. Using more clusters yields practically no advantage.}
+\begin{figure}
+\centering
+\includegraphics[scale = 0.75]{images/q7_clustering.pdf}
+\caption{Number of Clusters and Within group SOS} 
+\label{Number_of_Clusters_and_within_group_SOS}
+\end{figure}
+{\par For this reason then a clustering model will be built using three clusters. The code below is used to achieve this. }
 
-\end{thebibliography}
+\begin{lstlisting}
+kmeansCluster = kmeans(collegeBalancedClustering, 3) # 3 cluster solution
+aggregate(collegeBalancedClustering,by=list(kmeansCluster$cluster),FUN=mean)
+>>  Group.1		  accept_rate	 	 Outstate	  	  Enroll	 	Grad.Rate  		Private
+>> 1       1   	0.7735830 	11752.756 	 568.2968 	 71.58158 	1.915789
+>> 2       2 	  0.5555162 	17662.161 	 793.0853  	84.03460 		1.985348
+>> 3       3   	0.7468155  	6770.816 		1234.6934  	57.40017 		1.365651
+\end{lstlisting}
+{\par The \texttt{aggregate} function is used to find the mean value across all features split by cluster. This allows a preliminary look into how well defined each cluster is. Ideally the means would be far apart, and this trend is seen in places above. For each variable there is at least one cluster whose mean deviates from the others significantly, with the cluster that deviates being different from feature to feature. This indicates that perhaps a three state target variable is more appropriate rather than the binary "isElite" seen in the original dataset.}
+{\par Having determined that there may be subgroups within either Elite or Non-Elite colleges, it would be interesting to see where these subgroups by be. An attempt is made to do this by merging back in the isElite variable from the original dataset and looking at which classes are "mismatched" (i.e. records assigned to the three class we have potentially discovered.)}
+\begin{lstlisting}
+collegeBalancedClustering = data.frame(collegeBalancedClustering, kmeansCluster$cluster)
+collegeBalancedClustering$rowNames = row.names(collegeBalancedClustering)
+collegeBalanced$rowNames = row.names(collegeBalanced)
+actualResults = collegeBalanced[,c(6,7)]
+collegeBalancedClustering = merge(collegeBalancedClustering, actualResults, by="rowNames" )
+\end{lstlisting}
+
+\begin{lstlisting}
+library(sqldf)
+#matches 
+sqldf('select count(*) from collegeBalancedClustering 
+                where "kmeansCluster.cluster" = isElite')
+#nonmatches
+sqldf('select count(*) from collegeBalancedClustering 
+                where "kmeansCluster.cluster" != isElite')
+#extraGroup
+sqldf('select count(*) from collegeBalancedClustering 
+                where "kmeansCluster.cluster" = 3')
+
+
+#are those observations marked 3 by the clustering actaully 1's or 2's in the
+#orginal dataset?
+sqldf('select isElite, count(*) from collegeBalancedClustering
+             where "kmeansCluster.cluster" = 3 
+             group by isElite')
+\end{lstlisting}
+
+
 \end{document}
